@@ -1,0 +1,69 @@
+% script for the notch filter implementations.
+% This script filters a random signal y in 3 different ways and then gives
+% a plot of the original signal and the filtered signals for the LLS and a 
+% generic matlab filter. It will also give several convergence plot that
+% compare the value of one of the estimators in the RLLS and the same
+% estimator in LLS for different values of x_0.
+%Author: Sander Switsers (r0462339)
+%Date: 18/12/2017
+%Katholieke universiteit Leuven
+
+N = 20 + floor(3.9*6);
+L = 20*N;
+y = randn(L,1);
+ts = 1/N;
+t = 0:ts:ts*(N-1);
+f_cos = repmat(cos(t*2*pi),[1 20]);
+f_sin = repmat(sin(t*2*pi),[1 20]);
+
+f = L/2*linspace(-1,1,L);
+
+fft_y = fft(y)./numel(y);
+fft_y = fftshift(fft_y);
+figure, subplot(2,2,1), plot(f,abs(fft_y)), title('Magnitude FFT of signal');
+axis([0 50 0 inf]);
+xlabel('Frequency (Hz)');
+ylabel('magnitude');
+
+A = [transpose(f_sin)  transpose(f_cos)];
+x = (transpose(A) * A)\ (transpose(A) * y);
+y_filt = y - A*x;
+
+fft_y_filt = fft(y_filt)./numel(y_filt);
+fft_y_filt = fftshift(fft_y_filt);
+subplot(2,2,3), plot(f,abs(fft_y_filt)), title('Magnitude FFT of filtered signal');
+axis([0 50 0 inf]);
+xlabel('Frequency (Hz)');
+ylabel('magnitude');
+
+d = designfilt('bandstopiir','FilterOrder',2, ...
+               'HalfPowerFrequency1',21,'HalfPowerFrequency2',22, ...
+               'DesignMethod','butter','SampleRate',L);
+y_ffilt = filtfilt(d,y);
+fft_y_ffilt = fft(y_ffilt)./numel(y_ffilt);
+fft_y_ffilt = fftshift(fft_y_ffilt);
+subplot(2,2, plot(f,abs(fft_y_filt)), title('Magnitude FFT of filtered signal with matlab filter');
+axis([0 50 0 inf]);
+xlabel('Frequency (Hz)');
+ylabel('magnitude'); 
+
+x_r = ones(2,L+1);
+%x_r = zeros(2,L+1);
+%P = eye(2,2);
+
+for j = 1:9
+    x_r(:,1) = [(j-1)/8 (1-rem(j,3))];
+    P = randn(2,2);
+    for i = 1:L
+        an = [f_sin(i) f_cos(i)];
+        An = (P*transpose(an))/(1+an*P*transpose(an));
+        P = P - (P*transpose(an)*an*P)/(1+an*P*transpose(an));
+        x_r(:,i+1) = x_r(:,i) - An*(an*x_r(:,i) - y(i));
+    end
+    figure, plot(linspace(0,L,L+1),x_r(1,:) - x(1)),title(['convergence of x(1) with x_0(1):' num2str(x_r(1,1))]);
+    axis([0 inf -1 1]);
+    xlabel('N');
+    ylabel('x_rec(1) - x(1)'); 
+end
+
+
