@@ -1,13 +1,13 @@
 function varargout = r_estimator(varargin)
 %R_ESTIMATE Calculates an estimator for R in the eq u=R*i
-%r_estimate = r_estimator(sample_u, sample_i, method_name, parameters) 
+%r_estimate = r_estimator(sample_u, sample_i, method_name, parameters)
 %
 %   INPUT:
 %   sample_u = samples of the tension u
 %   sample_i = samples of the current i
 %   method_name = choice between 3 methods
 %       'ls' Least Square
-%           Parameters: 
+%           Parameters:
 %               none
 %       'iv' Instumental Variables
 %           Parameters:
@@ -20,7 +20,7 @@ function varargout = r_estimator(varargin)
 %   r_estimate = estimation of R
 %
 %Author: HENRI DE PLAEN (r0681349)
-%Date: 01-03-2017
+%Date: 12-08-2017
 %Katholieke Universiteit Leuven
 
 sample_u = varargin{1} ; sample_i = varargin{2} ;

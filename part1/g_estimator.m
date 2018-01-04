@@ -1,6 +1,6 @@
 function varargout = g_estimator(varargin)
-%R_ESTIMATE Calculates an estimator for g in the eq y=conv(g,u)
-%[r_estimate,cost] = g_estimator(sample_y, sample_u, order, method_name)
+%G_ESTIMATE Calculates an estimator for g in the eq y=conv(g,u)
+%[g_estimate,cost_ls,cost_aic] = g_estimator(sample_y, sample_u, order, method_name)
 %
 %   INPUT:
 %   sample_y = sample of the output signal y
