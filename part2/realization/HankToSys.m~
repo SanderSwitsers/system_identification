@@ -5,8 +5,7 @@ function [A, C] = HankToSys(Y)
 %   Y = the hankel matrix for the system
 %   OUTPUT:
 %   [A C] = the state space representation of the autonomuos system
-%       which is the minimal state respresentation of the system
-%       mathcing the hankel matrix
+%       which i
 %
 %Author: SANDER SWITSERS (r0462339)
 %Date: 05-01-2018

@@ -1,4 +1,0 @@
-Y = hankel(1:10,10:19);
-[A, C] = HankToSys(Y)
-Y = hankel([0 4 6 2 3 3 9 0 4 6 2 3 3 9],[9 0 4 6 2 3 3 9 0 4 6 2 3 3])
-[A, C] = HankToSys(Y)
