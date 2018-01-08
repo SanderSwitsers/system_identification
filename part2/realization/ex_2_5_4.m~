@@ -1,9 +1,9 @@
-D = dlmread('data.txt');
+Data = dlmread('data.txt');
 W = zeros(18,19);
 for i=1:6
-   W(3*(i-1)+1,1:19) = D(i:i+18,2)';
-   W(3*(i-1)+2,1:19) = D(i:i+18,3)';
-   W(3*(i-1)+3,1:19) = D(i:i+18,4)';
+   W(3*(i-1)+1,1:19) = Data(i:i+18,2)';
+   W(3*(i-1)+2,1:19) = Data(i:i+18,3)';
+   W(3*(i-1)+3,1:19) = Data(i:i+18,4)';
 end
 W_p = W(1:9,:);
 W_f = W(10:18,:);
@@ -18,7 +18,7 @@ T = null([U V]);
 
 a = T(1:9,1)
 b = T(10:18,1)
-x = transpose(transpose(a1)*W_p)
+x = transpose(transpose(a)*W_p)
 
 % input-output subspace realization
 Y = W(3:3:18,:);
@@ -32,7 +32,8 @@ U_ii = U(7:8,:);
 Y_ii = Y(4,:);
 W_pp = W(1:12,:);
 W_1 = eye(3);
-W_2 = eye(size(U_f,2)) - transpose(U_f) * pinv(U_f*transpose(U_f)) * U_f;
+%W_2 = eye(size(U_f,2)) - transpose(U_f) * pinv(U_f*transpose(U_f)) * U_f;
+W_2 = eye(size(U_f,2));
 
 O_i = obl_proj(Y_f, U_f, W_p);
 O_im = obl_proj(Y_fm, U_fm, W_pp);
@@ -49,8 +50,23 @@ X_i = pinv(Gamma)*O_i;
 X_ip = pinv(Gamma_m)*O_im;
 
 A = sym('a');
-B = transpose(sym('b',[1 2]);
+B = sym('b',[1 2]);
 C = sym('c');
-D = transpose(sym('d',[1 2]);
+D = sym('d',[1 2]);
 
-eq = [X_ip;Y_ii] == [A, B;C, D
+eq1 = X_ip == A*X_i + B * U_ii
+eq2 = Y_ii == C*X_i + D * U_ii
+
+[M, M1] = equationsToMatrix(eq1);
+M = double([M M1]);
+M = rref(M,1e-8);
+[N, N1] = equationsToMatrix(eq1);
+N = double([N N1]);
+N = rref(N,1e-8);
+A = M(1,4);
+B = transpose(M(2:3,4));
+A = M(1,4);
+B = transpose(M(2:3,4));
+
+%[A, B1, B2] = vpasolve(eq2,[A,B])
+%eq = [X_ip;Y_ii] == [A, B; C, D]*[X_i;U_ii]

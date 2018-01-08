@@ -18,9 +18,8 @@ function result = obl_proj(varargin)
     A = varargin{1};
     B = varargin{2};
     C = varargin{3};
-    temp = [C*transpose(C) C*transpose(B); B*transpose(C) B*transpose(B)];
-    temp = pinv(temp);
-    temp = temp(:,1:size(C,1));
-    result = A * [transpose(C) transpose(B)] * temp * C;
+    result = pinv([C*transpose(C) C*transpose(B); B*transpose(C) B*transpose(B)]);
+    result = result(:,1:size(C,1));
+    result = A * [transpose(C) transpose(B)] * result * C;
     
 end
