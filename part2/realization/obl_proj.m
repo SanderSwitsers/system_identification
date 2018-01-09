@@ -21,5 +21,5 @@ function result = obl_proj(varargin)
     result = pinv([C*transpose(C) C*transpose(B); B*transpose(C) B*transpose(B)]);
     result = result(:,1:size(C,1));
     result = A * [transpose(C) transpose(B)] * result * C;
-    
+%    result = A/B*pinv(C/B)*(C/B);
 end

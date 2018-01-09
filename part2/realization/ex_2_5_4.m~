@@ -57,16 +57,28 @@ D = sym('d',[1 2]);
 eq1 = X_ip == A*X_i + B * U_ii
 eq2 = Y_ii == C*X_i + D * U_ii
 
-[M, M1] = equationsToMatrix(eq1);
-M = double([M M1]);
-M = rref(M,1e-8);
-[N, N1] = equationsToMatrix(eq1);
-N = double([N N1]);
-N = rref(N,1e-8);
-A = M(1,4);
-B = transpose(M(2:3,4));
-A = M(1,4);
-B = transpose(M(2:3,4));
+Rhs = [       Xi   ;  U_ii]; % Right hand side
+Lhs = [      Xip   ;  Y_ii]; % Left hand side
+
+% Solve least squares
+sol = Lhs/Rhs;
+
+% Extract the system matrices
+A = sol(1:n,1:n);
+B = sol(1:n,n+1:n+m);
+C = sol(n+1:n+l,1:n);
+D = sol(n+1:n+l,n+1:n+m);
+
+%[M, M1] = equationsToMatrix(eq1);
+%M = double([M M1]);
+%M = rref(M,1e-8);
+%[N, N1] = equationsToMatrix(eq2);
+%N = double([N N1]);
+%N = rref(N,1e-8);
+%A = M(1,4)
+%B = transpose(M(2:3,4))
+%C = N(1,4)
+%D = transpose(N(2:3,4))
 
 %[A, B1, B2] = vpasolve(eq2,[A,B])
 %eq = [X_ip;Y_ii] == [A, B; C, D]*[X_i;U_ii]
