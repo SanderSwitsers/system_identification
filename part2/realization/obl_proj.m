@@ -1,6 +1,7 @@
 function result = obl_proj(varargin)
-%G_ESTIMATE Calculates an estimator for g in the eq y=conv(g,u)
-%[g_estimate,cost_ls,cost_aic] = g_estimator(sample_y, sample_u, order, method_name)
+%obl_proj Calculates the projecton of a vector space A, on a vector space C
+%along another vector space B
+%[result] = obl_proj(A,B,C)
 %
 %   INPUT:
 %   A = vector space to be projected
