@@ -19,6 +19,9 @@
 %
 %Date:
 %6-1-2018 (new version after crash)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%TO DO:
+% * choose freq with variance ratio and not maximum
 
 %% init 
 clear all ; close all ; clc ; figure ;
@@ -29,18 +32,18 @@ n_expe = 100 ;
 n_points = 50 ;
 
 t = 0:L/(L-1):L ;
-rel_freqs = linspace(0,1/2,n_points) ;
+rel_freqs_est = linspace(0,pi,n_points) ;
 
 %prealloc
 outputs = zeros(L-delay,n_expe) ;
-magnitudes = zeros(n_points,1) ;
-phases = zeros(n_points,1) ;
+magnitudes_est = zeros(n_points,1) ;
+phases_est = zeros(n_points,1) ;
 
 %% calculate
 h = waitbar(0,'Processing...') ;
 for idx_points = 1:n_points
     %signal
-    input = 3*sin(2*pi*t*rel_freqs(idx_points)) ;
+    input = 3*sin(t*rel_freqs_est(idx_points)) ;
 
     %experiments
     for idx_expe = 1:n_expe
@@ -59,24 +62,25 @@ for idx_points = 1:n_points
     pos = find(abs(f_output)==magnitude) ;
     
     %store
-    magnitudes(idx_points) = magnitude ;
-    phases(idx_points) = angle(pos(1)) ;
+    magnitudes_est(idx_points) = magnitude ;
+    phases_est(idx_points) = angle(pos(1)) ;
 end
 close(h) ;
 
 %% plot
 figure ;
-subplot(1,2,1) ;
-plot(rel_freqs,mag2db(magnitudes),'--k',rel_freqs,0*rel_freqs,':k') ;
+% subplot(1,2,1) ;
+plot(rel_freqs_est,mag2db(magnitudes_est),'--k',rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode estimation') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
-axis([0 .5 -40 10]) ;
+axis([0 pi -50 15]) ;
 
-subplot(1,2,2) ;
-plot(rel_freqs,phases,'--k',rel_freqs,0*rel_freqs,':k') ;
-title('Phase change estimation') ;
-xlabel('Relative frequency [f/f_s]') ; ylabel('Phase change [rad]') ;
-axis([0 .5 -4 4]) ;
+% subplot(1,2,2) ;
+% plot(rel_freqs_est,phases_est,'--k',rel_freqs_est,0*rel_freqs_est,':k') ;
+% title('Phase change estimation') ;
+% xlabel('Relative frequency [f/f_s]') ; ylabel('Phase change [rad]') ;
+% axis([0 .5 -4 4]) ;
 
-    
-    
+%% save
+filename = 'bode_experiment.mat' ;
+save(filename,'magnitudes_est','phases_est','rel_freqs_est') ;
