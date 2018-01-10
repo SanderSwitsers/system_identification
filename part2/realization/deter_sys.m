@@ -6,6 +6,7 @@ function [A,B,C,D] = deter_sys(y,u,i,n)
 %       y: matrix of measured outputs
 %       u: matrix of measured inputs
 %       i: number of block rows in Hankel matrices 
+%       n: order of the system
 % 
 %   OUTPUT:
 %       A,B,C,D: deterministic state space system

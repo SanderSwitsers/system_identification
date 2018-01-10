@@ -43,7 +43,7 @@ xlabel('Sample') ; ylabel('Magnitude') ;
 axis([0 L -1 1]) ;
 
 subplot(1,2,2) ;
-plot(1:L/2+1,mag2db(mag_peaks),'-k') ;
+plot(linspace(0,pi,L/2+1),mag2db(mag_peaks),'-k') ;
 title('Frequency') ;
-xlabel('z^{-1}') ; ylabel('Intensity [dB]') ;
-axis([0 L/2+1 0 inf]) ;
+xlabel('Relative frequency') ; ylabel('Intensity [dB]') ;
+axis([0 pi -inf inf]) ;

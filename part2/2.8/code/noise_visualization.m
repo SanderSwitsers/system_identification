@@ -24,10 +24,10 @@ subplot(1,2,1) ;
 plot(1:L,input,'-k') ;
 title('Input') ;
 xlabel('Sample') ; ylabel('Magnitude') ;
-axis([0 L 8 22]) ;
+axis([0 L -5 25]) ;
 
 subplot(1,2,2) ;
 plot(1:L,output,'-k') ;
 title('Output') ;
 xlabel('Sample') ; ylabel('Magnitude') ;
-axis([0 L 8 22]) ;
+axis([0 L -5 25]) ;
