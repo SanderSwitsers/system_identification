@@ -1,14 +1,24 @@
-function [best_oe_sys,best_red_oe_sys] = select_oe(varargin)
 %SELECT OUTPUT ERROR MODEL
 %System Identification & Modeling
 %
 %Author:
-%SANDER SWITSERS
-%r00462339
+%HENRI DE PLAEN
+%r0681349
 %KULeuven
 %
 %Date:
-%10-1-2018
+%6-1-2018 (new version after crash)
+
+%NOISE OFFSET
+%System Identification & Modeling
+%
+%Author:
+%HENRI DE PLAEN
+%r0681349
+%KULeuven
+%
+%Date:
+%6-1-2018 (new version after crash)
 
 %% init
 %set sizes
@@ -18,57 +28,41 @@ L_test_2 = 200 ;
 L_learn = 1000 ;
 
 %parameter search ranges
-nb_range = 13:19 ;
-nf_range = 13:19 ;
+nb_range = 12:18 ;
+nf_range = 12:18 ;
 
 %misc
 delay = 14 ;
 opt = simOptions('AddNoise',false);
 
 %% datasets
-if (nargin == 12)
-    input_val = varargin{1};
-    input_test_1 = varargin{2};
-    input_test_2 = varargin{3};
-    input_learn = varargin{4};
-    output_val = varargin{5};
-    output_test_1 = varargin{6};
-    output_test_2 = varargin{7};
-    output_learn = varargin{8};
-    data_val = varargin{9};
-    data_test_1 = varargin{10};
-    data_test_2 = varargin{11};
-    data_learn = varargin{12};
-    
-else
-    %validation set
-    input_val = randn(L_val,1) ;
-    output_val = exercise2(input_val) ;
-    output_val = preprocess(output_val) ;
-    input_val = input_val(1:end-delay) ;
-    data_val = iddata(output_val, input_val) ;
-    
-    %test set #1
-    input_test_1 = randn(L_test_1,1) ;
-    output_test_1 = exercise2(input_test_1) ;
-    output_test_1 = preprocess(output_test_1) ;
-    input_test_1 = input_test_1(1:end-delay) ;
-    data_test_1 = iddata(output_test_1, input_test_1) ;
-    
-    %test set #2
-    input_test_2 = randn(L_test_2,1) ;
-    output_test_2 = exercise2(input_test_2) ;
-    output_test_2 = preprocess(output_test_2) ;
-    input_test_2 = input_test_2(1:end-delay) ;
-    data_test_2 = iddata(output_test_2, input_test_2) ;
-    
-    %learning set
-    input_learn = randn(L_learn,1) ;
-    output_learn = exercise2(input_learn) ;
-    output_learn = preprocess(output_learn) ;
-    input_learn = input_learn(1:end-delay) ;
-    data_learn = iddata(output_learn, input_learn) ;
-end
+%validation set
+input_val = randn(L_val,1) ;
+output_val = exercise2(input_val) ;
+output_val = preprocess(output_val) ;
+input_val = input_val(1:end-delay) ;
+data_val = iddata(output_val, input_val) ;
+
+%test set #1
+input_test_1 = randn(L_test_1,1) ;
+output_test_1 = exercise2(input_test_1) ;
+output_test_1 = preprocess(output_test_1) ;
+input_test_1 = input_test_1(1:end-delay) ;
+data_test_1 = iddata(output_test_1, input_test_1) ;
+
+%test set #2
+input_test_2 = randn(L_test_2,1) ;
+output_test_2 = exercise2(input_test_2) ;
+output_test_2 = preprocess(output_test_2) ;
+input_test_2 = input_test_2(1:end-delay) ;
+data_test_2 = iddata(output_test_2, input_test_2) ;
+
+%learning set
+input_learn = randn(L_learn,1) ;
+output_learn = exercise2(input_learn) ;
+output_learn = preprocess(output_learn) ;
+input_learn = input_learn(1:end-delay) ;
+data_learn = iddata(output_learn, input_learn) ;
 
 %% parameters
 %prealloc
@@ -100,7 +94,7 @@ for idx_nb = 1:nb_length
 end
 
 %% select model
-[~,index_min] = min(oe_aic_results(:)) ;
+[best_oe_aic,index_min] = min(oe_aic_results(:)) ;
 [index_min_nb,index_min_nf] = ind2sub(size(oe_aic_results),index_min);
 best_order = oe_orders(index_min_nb,index_min_nf,:) ;
 best_order = transpose(squeeze(best_order));
@@ -110,23 +104,21 @@ best_oe_sys = oe (data_learn, best_order);
 oe_ss = ss(best_oe_sys);
 figure; hsvd(oe_ss);
 
-red_oe_fit_results = zeros(8,2);
-red_orders = 8:15;
+red_oe_fit_results = zeros(4,2);
+red_orders = 9:12;
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
-    order = red_orders(n);
+    order = [red_orders(n),red_orders(n),0];
     
-    red_oe_ss = balred(oe_ss,order);
-    red_oe_sys = idpoly(red_oe_ss) ;
+    red_oe_sys = oe (data_learn, order) ;
     output_oe = sim(red_oe_sys,input_test_2,opt) ;
         
     red_oe_fit = fit_test(output_oe,output_test_2) ;
     red_oe_fit_results(n,:) = [red_orders(n),red_oe_fit];
 end
-disp(red_oe_fit_results);
-% order 12 is a good compromise
-red_oe_ss =balred(oe_ss,12);
+% order 10 is the best compromise
+red_oe_ss =balred(oe_ss,10);
 best_red_oe_sys = idpoly(red_oe_ss);
 
 %% plots
@@ -151,7 +143,8 @@ plot(rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
-legend('Estimated','OE','red OE') ;
+% legend('Estimated','ARMAX','red ARMAX') ;
+legend('Estimated','ARMAX') ;
 
 %poles
 [p_oe,z_oe] = pzmap(best_oe_sys) ;
@@ -173,12 +166,12 @@ line(get(gca, 'ylim'), [0 0],'Color','black','LineStyle',':') ;
 axis([-2 2 -2 2]) ;
 
 figure;
-compare(data_val,best_oe_sys,best_red_oe_sys);
+compare(data_val,best_oe_sys);
 
 figure;
-%resid(data_val,best_oe_sys);
-subplot(1,2,1);
 resid(data_val,best_oe_sys);
-
-subplot(1,2,2);
-resid(data_val,best_red_oe_sys);
+% subplot(1,2,1); hold on;
+% resid(data_val,best_armax_sys);
+% 
+% subplot(1,2,2); hold on;
+% resid(data_val,best_red_armax_sys);
