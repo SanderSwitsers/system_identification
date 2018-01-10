@@ -1,10 +1,10 @@
-function [best_armax_sys,best_red_armax_sys] = select_armax(varargin)
-%SELECT ARMAX
+function [best_sub_sys] = select_sub(varargin)
+%SELECT SUBSPACE SYSTEM
 %System Identification & Modeling
 %
 %Authors:
-%HENRI DE PLAEN, SANDER SWITSERS
-%r0681349, r0462339
+%SANDER SWITSERS
+%r0462339
 %KULeuven
 %
 %Date:
@@ -17,15 +17,9 @@ L_test_1 = 200 ;
 L_test_2 = 200 ;
 L_learn = 1000 ;
 
-%parameter search ranges
-na_range = 16:22 ;
-nb_range = 11:16 ;
-nc_range = 14:16 ;
-
 %misc
 delay = 14 ;
 opt = simOptions('AddNoise',false);
-
 
 %% datasets
 if (nargin == 12)
@@ -72,78 +66,25 @@ else
     data_learn = iddata(output_learn, input_learn) ;
 end
 
-%% parameters
-%prealloc
-na_length = length(na_range) ;
-nb_length = length(nb_range) ;
-nc_length = length(nc_range) ;
-armax_fit_results = zeros(na_length,nb_length,nc_length) ;
-armax_aic_results = zeros(na_length,nb_length,nc_length) ;
-armax_orders = zeros(na_length,nb_length,nc_length,4) ;
+%% find good model
 
-%loop
-for idx_na = 1:na_length
-    for idx_nb = 1:nb_length
-        for idx_nc = 1:nc_length
-            na = na_range(idx_na) ;
-            nb = nb_range(idx_nb) ;
-            nc = nc_range(idx_nc) ;
-            nk = 0; %preprocess suppressed the delay
-            
-            order = [na,nb,nc,nk] ;
-            armax_sys = armax (data_learn, order) ;
-            output_armax = sim(armax_sys,input_test_2,opt) ;
-            
-            armax_fit = fit_test(output_armax,output_test_2) ;
-            armax_aic = aic(armax_sys) ;
-            
-            armax_fit_results(idx_na,idx_nb,idx_nc) = armax_fit ;
-            armax_aic_results(idx_na,idx_nb,idx_nc) = armax_aic ;
-            armax_orders(idx_na,idx_nb,idx_nc,:) = order ;
-        end
-    end
-end
-
-%% select model
-[~,index_min] = min(armax_aic_results(:)) ;
-[index_min_na,index_min_nb,index_min_nc] = ind2sub(size(armax_aic_results),index_min);
-best_order = armax_orders(index_min_na,index_min_nb,index_min_nc,:) ;
-best_order = transpose(squeeze(best_order));
-best_armax_sys = armax (data_learn, best_order);
-
-disp('best order');
-disp(best_order);
-disp('nc =');
-disp(best_order(3));
-disp('index_best');
-disp([index_min_na,index_min_nb]);
-disp('armax fit');
-disp(armax_fit_results(:,:,index_min_nc));
-disp('armax aic');
-disp(armax_aic_results(:,:,index_min_nc));
-
-%% find reduced model
-armax_ss = ss(best_armax_sys);
-figure; hsvd(armax_ss);
-
-red_orders = 7:15;
-red_armax_fit_results = zeros(length(red_orders),2);
+sub_orders = 8:15;
+sub_fit_results = zeros(length(sub_orders),2);
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
     order = red_orders(n);
     
-    red_armax_ss = balred(armax_ss,order);
-    red_armax_sys = idpoly(red_armax_ss) ;
-    output_armax = sim(red_armax_sys,input_test_2,opt) ;
+    sub_ss = n4sid(data_learn,order);
+    sub_sys = idpoly(sub_ss) ;
+    output_sub = sim(sub_sys,input_test_2,opt) ;
         
-    red_armax_fit = fit_test(output_armax,output_test_2) ;
-    red_armax_fit_results(n,:) = [red_orders(n),red_armax_fit];
+    sub_fit = fit_test(output_sub,output_test_2) ;
+    sub_fit_results(n,:) = [red_orders(n),sub_fit];
 end
-disp('reduced armax fit');
-disp(red_armax_fit_results);
-% order 11 is a good compromise
-red_armax_ss =balred(armax_ss,11);
+disp(sub_fit_results);
+% order 13 is a good compromise
+red_armax_ss =balred(armax_ss,12);
 best_red_armax_sys = idpoly(red_armax_ss);
 
 %% plots
@@ -168,7 +109,7 @@ plot(rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
-legend('real output','ARMAX','red ARMAX') ;
+legend('Estimated','ARMAX','red ARMAX') ;
 %legend('Estimated','ARMAX') ;
 
 %poles

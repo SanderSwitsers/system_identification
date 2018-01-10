@@ -115,12 +115,25 @@ best_order = bj_orders(index_min_nb,index_min_nf,index_min_nc,index_min_nd,:) ;
 best_order = transpose(squeeze(best_order));
 best_bj_sys = bj (data_learn, best_order);
 
+disp('best order');
+disp(best_order);
+disp('nc =');
+disp(best_order(3));
+disp('nd =');
+disp(best_order(4));
+disp('index_best');
+disp([index_min_nb,index_min_nf]);
+disp('bj fit');
+disp(bj_fit_results(:,:,index_min_nc,index_min_nd));
+disp('bj aic');
+disp(bj_aic_results(:,:,index_min_nc,index_min_nd));
+
 %% find reduced model
 bj_ss = ss(best_bj_sys);
 figure; hsvd(bj_ss);
 
-red_bj_fit_results = zeros(8,2);
 red_orders = 7:14;
+red_bj_fit_results = zeros(length(red_orders),2);
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
@@ -134,8 +147,8 @@ for n = 1:length(red_orders)
     red_bj_fit_results(n,:) = [red_orders(n),red_bj_fit];
 end
 disp(red_bj_fit_results);
-% order 11 is a good compromise
-red_bj_ss =balred(bj_ss,11);
+% order 7 is a good compromise
+red_bj_ss =balred(bj_ss,7);
 best_red_bj_sys = idpoly(red_bj_ss);
 
 %% plots
@@ -161,12 +174,12 @@ title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
 % legend('Estimated','ARMAX','red ARMAX') ;
-legend('Estimated','BJ','red BJ') ;
+legend('real output','BJ','red BJ') ;
 
 %poles
 [p_bj,z_bj] = pzmap(best_bj_sys) ;
 p_bj_x = real(p_bj) ; p_bj_y = imag(p_bj) ;
-z_bj_x = real(z_bj) ; z_bj_y = imag(p_bj) ;
+z_bj_x = real(z_bj) ; z_bj_y = imag(z_bj) ;
 
 subplot(1,2,2) ; hold on ;
 plot(p_bj_x,p_bj_y,'ok') ; plot(z_bj_x,z_bj_y,'*k') ;
@@ -187,8 +200,8 @@ compare(data_val,best_bj_sys,best_red_bj_sys);
 
 figure;
 %resid(data_val,best_bj_sys);
-subplot(1,2,1); hold on;
+subplot(1,2,1);
 resid(data_val,best_bj_sys);
  
-subplot(1,2,2); hold on;
+subplot(1,2,2);
 resid(data_val,best_red_bj_sys);

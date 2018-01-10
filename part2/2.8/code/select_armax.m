@@ -26,20 +26,6 @@ nc_range = 14:16 ;
 delay = 14 ;
 opt = simOptions('AddNoise',false);
 
-%% init
-%set sizes
-L_val = 200 ;
-L_test_1 = 200 ;
-L_test_2 = 200 ;
-L_learn = 1000 ;
-
-%parameter search ranges
-na_range = 2:3:32 ;%23
-nb_range = 22:4:32 ;%25
-
-%misc
-delay = 14 ;
-opt = simOptions('AddNoise',false);
 
 %% datasets
 if (nargin == 12)
@@ -125,12 +111,23 @@ best_order = armax_orders(index_min_na,index_min_nb,index_min_nc,:) ;
 best_order = transpose(squeeze(best_order));
 best_armax_sys = armax (data_learn, best_order);
 
+disp('best order');
+disp(best_order);
+disp('nc =');
+disp(best_order(3));
+disp('index_best');
+disp([index_min_na,index_min_nb]);
+disp('armax fit');
+disp(armax_fit_results(:,:,index_min_nc));
+disp('armax aic');
+disp(armax_aic_results(:,:,index_min_nc));
+
 %% find reduced model
 armax_ss = ss(best_armax_sys);
 figure; hsvd(armax_ss);
 
-red_armax_fit_results = zeros(8,2);
-red_orders = 8:15;
+red_orders = 7:15;
+red_armax_fit_results = zeros(length(red_orders),2);
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
@@ -143,9 +140,10 @@ for n = 1:length(red_orders)
     red_armax_fit = fit_test(output_armax,output_test_2) ;
     red_armax_fit_results(n,:) = [red_orders(n),red_armax_fit];
 end
+disp('reduced armax fit');
 disp(red_armax_fit_results);
-% order 13 is a good compromise
-red_armax_ss =balred(armax_ss,12);
+% order 8 is a good compromise
+red_armax_ss =balred(armax_ss,8);
 best_red_armax_sys = idpoly(red_armax_ss);
 
 %% plots
@@ -170,13 +168,13 @@ plot(rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
-legend('Estimated','ARMAX','red ARMAX') ;
+legend('real output','ARMAX','red ARMAX') ;
 %legend('Estimated','ARMAX') ;
 
 %poles
 [p_armax,z_armax] = pzmap(best_armax_sys) ;
 p_armax_x = real(p_armax) ; p_armax_y = imag(p_armax) ;
-z_armax_x = real(z_armax) ; z_armax_y = imag(p_armax) ;
+z_armax_x = real(z_armax) ; z_armax_y = imag(z_armax) ;
 
 subplot(1,2,2) ; hold on ;
 plot(p_armax_x,p_armax_y,'ok') ; plot(z_armax_x,z_armax_y,'*k') ;

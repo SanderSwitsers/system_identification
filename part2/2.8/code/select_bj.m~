@@ -18,8 +18,10 @@ L_test_2 = 200 ;
 L_learn = 1000 ;
 
 %parameter search ranges
-nb_range = 13:19 ;
-nf_range = 13:19 ;
+nb_range = 20:22 ;
+nf_range = 11:13 ;
+nc_range = 10:14 ;
+nd_range = 7:9 ;
 
 %misc
 delay = 14 ;
@@ -113,12 +115,25 @@ best_order = bj_orders(index_min_nb,index_min_nf,index_min_nc,index_min_nd,:) ;
 best_order = transpose(squeeze(best_order));
 best_bj_sys = bj (data_learn, best_order);
 
+disp('best order');
+disp(best_order);
+disp('nc =');
+disp(best_order(3));
+disp('nd =');
+disp(best_order(4));
+disp('index_best');
+disp([index_min_nb,index_min_nf]);
+disp('bj fit');
+disp(bj_fit_results(:,:,index_min_nc,index_min_nd));
+disp('bj aic');
+disp(bj_aic_results(:,:,index_min_nc,index_min_nd));
+
 %% find reduced model
 bj_ss = ss(best_bj_sys);
 figure; hsvd(bj_ss);
 
-red_bj_fit_results = zeros(8,2);
 red_orders = 7:14;
+red_bj_fit_results = zeros(length(red_orders),2);
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
@@ -131,9 +146,9 @@ for n = 1:length(red_orders)
     red_bj_fit = fit_test(output_bj,output_test_2) ;
     red_bj_fit_results(n,:) = [red_orders(n),red_bj_fit];
 end
-
-% order 11 is a good compromise
-red_bj_ss =balred(bj_ss,11);
+disp(red_bj_fit_results);
+% order 9 is a good compromise
+red_bj_ss =balred(bj_ss,9);
 best_red_bj_sys = idpoly(red_bj_ss);
 
 %% plots
@@ -153,18 +168,18 @@ figure ;
 subplot(1,2,1) ; hold on ;
 plot(rel_freqs_est,mag2db(magnitudes_est),'--k') ; 
 plot(freqs_bj,mag2db(magnitudes_bj),'-k') ;
-%plot(freqs_red_,mag2db(magnitudes_red_armax),'-.k') ;
+plot(freqs_red_bj,mag2db(magnitudes_red_bj),'-.k') ;
 plot(rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
 % legend('Estimated','ARMAX','red ARMAX') ;
-legend('Estimated','BJ') ;
+legend('real output','BJ','red BJ') ;
 
 %poles
 [p_bj,z_bj] = pzmap(best_bj_sys) ;
 p_bj_x = real(p_bj) ; p_bj_y = imag(p_bj) ;
-z_bj_x = real(z_bj) ; z_bj_y = imag(p_bj) ;
+z_bj_x = real(z_bj) ; z_bj_y = imag(z_bj) ;
 
 subplot(1,2,2) ; hold on ;
 plot(p_bj_x,p_bj_y,'ok') ; plot(z_bj_x,z_bj_y,'*k') ;
@@ -181,12 +196,12 @@ line(get(gca, 'ylim'), [0 0],'Color','black','LineStyle',':') ;
 axis([-2 2 -2 2]) ;
 
 figure;
-compare(data_val,best_bj_sys);
+compare(data_val,best_bj_sys,best_red_bj_sys);
 
 figure;
+%resid(data_val,best_bj_sys);
+subplot(1,2,1);
 resid(data_val,best_bj_sys);
-% subplot(1,2,1); hold on;
-% resid(data_val,best_armax_sys);
-% 
-% subplot(1,2,2); hold on;
-% resid(data_val,best_red_armax_sys);
+ 
+subplot(1,2,2);
+resid(data_val,best_red_bj_sys);

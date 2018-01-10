@@ -106,12 +106,21 @@ best_order = oe_orders(index_min_nb,index_min_nf,:) ;
 best_order = transpose(squeeze(best_order));
 best_oe_sys = oe (data_learn, best_order);
 
+disp('best order');
+disp(best_order);
+disp('index_best');
+disp([index_min_nb,index_min_nf]);
+disp('oe fit');
+disp(oe_fit_results);
+disp('oe aic');
+disp(oe_aic_results);
+
 %% find reduced model
 oe_ss = ss(best_oe_sys);
 figure; hsvd(oe_ss);
 
-red_oe_fit_results = zeros(8,2);
 red_orders = 8:15;
+red_oe_fit_results = zeros(length(red_orders),2);
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
@@ -124,9 +133,10 @@ for n = 1:length(red_orders)
     red_oe_fit = fit_test(output_oe,output_test_2) ;
     red_oe_fit_results(n,:) = [red_orders(n),red_oe_fit];
 end
+disp('reduced oe fit');
 disp(red_oe_fit_results);
-% order 12 is a good compromise
-red_oe_ss =balred(oe_ss,12);
+% order 8 is a good compromise
+red_oe_ss =balred(oe_ss,8);
 best_red_oe_sys = idpoly(red_oe_ss);
 
 %% plots
@@ -151,12 +161,12 @@ plot(rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
-legend('Estimated','OE','red OE') ;
+legend('real output','OE','red OE') ;
 
 %poles
 [p_oe,z_oe] = pzmap(best_oe_sys) ;
 p_oe_x = real(p_oe) ; p_oe_y = imag(p_oe) ;
-z_oe_x = real(z_oe) ; z_oe_y = imag(p_oe) ;
+z_oe_x = real(z_oe) ; z_oe_y = imag(z_oe) ;
 
 subplot(1,2,2) ; hold on ;
 plot(p_oe_x,p_oe_y,'ok') ; plot(z_oe_x,z_oe_y,'*k') ;

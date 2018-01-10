@@ -3,6 +3,7 @@
 %
 %creates graphs of all models and saves the models
 %comment out select_model if that patricular model isn't necesarry
+%this was made to create all the models with the same input
 %
 %Author:
 %SANDER SWITSERS
@@ -13,7 +14,15 @@
 %10-1-2018
 
 %% init
-clear all ; close all ; clc ;
+clear all ; close all ; clc ;L_val = 200 ;
+L_test_1 = 200 ;
+L_test_2 = 200 ;
+L_learn = 1000 ;
+
+%misc
+delay = 14 ;
+opt = simOptions('AddNoise',false);
+
 
 %% datasets
 %validation set
@@ -44,5 +53,66 @@ output_learn = preprocess(output_learn) ;
 input_learn = input_learn(1:end-delay) ;
 data_learn = iddata(output_learn, input_learn) ;
 
-[ba,bra] = select_arx(data_val,data_test_1,data_test_2,data_learn)
+% [barx,brarx] = select_arx(input_val,input_test_1,input_test_2,input_learn ...
+%     ,output_val,output_test_1,output_test_2,output_learn ...
+%     ,data_val,data_test_1,data_test_2,data_learn);
+% 
+% [barmax,brarmax] = select_armax(input_val,input_test_1,input_test_2,input_learn ...
+%     ,output_val,output_test_1,output_test_2,output_learn ...
+%     ,data_val,data_test_1,data_test_2,data_learn);
+% 
+% [boe,broe] = select_oe(input_val,input_test_1,input_test_2,input_learn ...
+%     ,output_val,output_test_1,output_test_2,output_learn ...
+%     ,data_val,data_test_1,data_test_2,data_learn);
+% 
+% [bbj,brbj] = select_bj(input_val,input_test_1,input_test_2,input_learn ...
+%     ,output_val,output_test_1,output_test_2,output_learn ...
+%     ,data_val,data_test_1,data_test_2,data_learn);
 
+[A,B,C,D] = det_stat(output,input_test_1,30,12);
+sys = ss(A,B,C,D);
+sub_sys = idpoly(sys);
+
+%% plots
+%bode
+output_val_sub = sim(sub_sys,input_val,opt) ;
+[magnitudes_sub,phases_sub,freqs_sub] = bode(sub_sys) ;
+magnitudes_sub = squeeze(magnitudes_sub) ;
+phases_sub = squeeze(phases_sub) ;
+
+load 'bode_experiment.mat' ;
+figure ;
+subplot(1,2,1) ; hold on ;
+plot(rel_freqs_est,mag2db(magnitudes_est),'--k') ; 
+plot(freqs_sub,mag2db(magnitudes_sub),'-k') ;
+plot(rel_freqs_est,0*rel_freqs_est,':k') ;
+title('Bode plot') ;
+xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
+axis([0 pi -inf inf]) ;
+% legend('Estimated','ARMAX','red ARMAX') ;
+legend('Estimated','SUB') ;
+
+%poles
+[p_sub,z_sub] = pzmap(sub_sys) ;
+p_sub_x = real(p_sub) ; p_sub_y = imag(p_sub) ;
+z_sub_x = real(z_sub) ; z_sub_y = imag(p_sub) ;
+
+subplot(1,2,2) ; hold on ;
+plot(p_sub_x,p_sub_y,'ok') ; plot(z_sub_x,z_sub_y,'*k') ;
+title('Pole-Zero map of estimated model') ;
+xlabel('Real part') ; ylabel('Imaginary part') ;
+legend('Poles','Zeros') ;
+r = 1 ; x = 0 ; y = 0 ;
+th = 0:pi/50:2*pi;
+xunit = r * cos(th) + x ;
+yunit = r * sin(th) + y ;
+plot(xunit, yunit,':k') ;
+line([0 0], get(gca, 'xlim'),'Color','black','LineStyle',':') ;
+line(get(gca, 'ylim'), [0 0],'Color','black','LineStyle',':') ;
+axis([-2 2 -2 2]) ;
+
+figure;
+compare(data_val,sub_sys);
+
+figure;
+resid(data_val,best_sub_sys);

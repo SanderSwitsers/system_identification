@@ -18,8 +18,8 @@ L_test_2 = 200 ;
 L_learn = 1000 ;
 
 %parameter search ranges
-na_range = 2:3:32 ;%23
-nb_range = 22:4:32 ;%25
+na_range = 8:3:35 ;%23
+nb_range = 24:3:32 ;%25
 
 %misc
 delay = 14 ;
@@ -108,11 +108,21 @@ best_order = arx_orders(index_min_na,index_min_nb,:) ;
 best_order = transpose(squeeze(best_order));
 best_arx_sys = arx (data_learn, best_order);
 
+disp('best order');
+disp(best_order);
+disp('index_best');
+disp([index_min_na,index_min_nb]);
+disp('arx fit');
+disp(arx_fit_results);
+disp('arx aic');
+disp(arx_aic_results);
+
 %% find reduced model
 arx_ss = ss(best_arx_sys);
 figure; hsvd(arx_ss);
-red_arx_fit_results = zeros(5,2);
+
 red_orders = 7:15;
+red_arx_fit_results = zeros(length(red_orders),2);
 
 %values for n chosen from hsvd
 for n = 1:length(red_orders)
@@ -125,9 +135,10 @@ for n = 1:length(red_orders)
     red_arx_fit = fit_test(output_arx,output_test_2) ;
     red_arx_fit_results(n,:) = [red_orders(n),red_arx_fit];
 end
+disp('reduced arx fit');
 disp(red_arx_fit_results);
-% order  is a good compromise
-red_arx_ss = balred(arx_ss,8);
+% order 9 is a good compromise
+red_arx_ss = balred(arx_ss,9);
 best_red_arx_sys = idpoly(red_arx_ss);
 
 %% plots
@@ -152,12 +163,12 @@ plot(rel_freqs_est,0*rel_freqs_est,':k') ;
 title('Bode plot') ;
 xlabel('Relative frequency [f/f_s]') ; ylabel('Intensity [dB]') ;
 axis([0 pi -inf inf]) ;
-legend('Estimated','ARX','red ARX') ;
+legend('real output','ARX','red ARX') ;
 
 %poles
 [p_arx,z_arx] = pzmap(best_arx_sys) ;
 p_arx_x = real(p_arx) ; p_arx_y = imag(p_arx) ;
-z_arx_x = real(z_arx) ; z_arx_y = imag(p_arx) ;
+z_arx_x = real(z_arx) ; z_arx_y = imag(z_arx) ;
 
 subplot(1,2,2) ; hold on ;
 plot(p_arx_x,p_arx_y,'ok') ; plot(z_arx_x,z_arx_y,'*k') ;
